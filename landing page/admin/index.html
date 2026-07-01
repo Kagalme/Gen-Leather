@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GenLeather Admin Dashboard</title>
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__logo">GenLeather Admin</div>
+      <nav>
+        <ul class="sidebar__nav">
+          <li><a href="#dashboard" class="nav-item active" data-section="dashboard"><span class="icon">📊</span> Dashboard</a></li>
+          <div class="sidebar__divider"></div>
+          <li><a href="#hero" class="nav-item" data-section="hero"><span class="icon">🏠</span> Hero Section</a></li>
+          <li><a href="#kategori" class="nav-item" data-section="kategori"><span class="icon">📁</span> Kategori</a></li>
+          <li><a href="#koleksi" class="nav-item" data-section="koleksi"><span class="icon">🛍️</span> Koleksi Produk</a></li>
+          <li><a href="#cerita" class="nav-item" data-section="cerita"><span class="icon">📖</span> Cerita / About</a></li>
+          <li><a href="#ulasan" class="nav-item" data-section="ulasan"><span class="icon">💬</span> Ulasan</a></li>
+          <li><a href="#cta" class="nav-item" data-section="cta"><span class="icon">📢</span> CTA Section</a></li>
+          <li><a href="#footer" class="nav-item" data-section="footer"><span class="icon">📋</span> Footer</a></li>
+          <div class="sidebar__divider"></div>
+          <li><a href="../index.html" target="_blank"><span class="icon">👁️</span> Lihat Website</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header__left">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <h1 class="header__title" id="sectionTitle">Dashboard</h1>
+        </div>
+        <div class="header__actions">
+          <a href="#" id="resetBtn">🔄 Reset ke Default</a>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Dashboard Overview -->
+        <section id="section-dashboard" class="section-content active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <p class="stat-card__label">Produk di Koleksi</p>
+              <p class="stat-card__value" id="statProducts">0</p>
+            </div>
+            <div class="stat-card">
+              <p class="stat-card__label">Kategori</p>
+              <p class="stat-card__value" id="statKategori">0</p>
+            </div>
+            <div class="stat-card">
+              <p class="stat-card__label">Testimonial</p>
+              <p class="stat-card__value" id="statUlasan">0</p>
+            </div>
+          </div>
+
+          <div class="section-panel">
+            <div class="section-panel__header">
+              <h2 class="section-panel__title"><span class="icon">💡</span> Quick Tips</h2>
+            </div>
+            <div class="section-panel__body">
+              <p>Selamat datang di GenLeather Admin Dashboard! Gunakan menu di sidebar untuk mengelola konten website Anda:</p>
+              <ul style="margin-top: 1rem; margin-left: 1.5rem; line-height: 1.8;">
+                <li><strong>Hero Section</strong> - Atur gambar, teks, dan statistik di bagian atas halaman</li>
+                <li><strong>Kategori</strong> - Kelola kategori produk (Tas, Dompet, Sabuk, dll)</li>
+                <li><strong>Koleksi Produk</strong> - Tambah, edit, atau hapus produk</li>
+                <li><strong>Cerita / About</strong> - Edit bagian tentang kami</li>
+                <li><strong>Ulasan</strong> - Kelola testimonial pelanggan</li>
+                <li><strong>Footer</strong> - Atur informasi kontak dan sosial media</li>
+              </ul>
+              <p style="margin-top: 1rem; color: var(--gold);">💾 Semua perubahan disimpan otomatis menggunakan localStorage.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Hero Section -->
+        <section id="section-hero" class="section-content">
+          <div class="section-panel">
+            <div class="section-panel__header">
+              <h2 class="section-panel__title"><span class="icon">🏠</span> Hero Section</h2>
+              <div class="section-toggle">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="heroEnabled" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+                <span>Aktif</span>
+              </div>
+            </div>
+            <div class="section-panel__body">
+              <form id="heroForm">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Label / Subtitle</label>
+                    <input type="text" id="heroLabel" placeholder="Contoh: Karya tangan pilihan">
+                  </div>
+                  <div class="form-group">
+                    <label>Badge Text</label>
+                    <input type="text" id="heroBadge" placeholder="Contoh: Edisi Terbatas">
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label>Judul (support HTML)</label>
+                  <textarea id="heroTitle" rows="3" placeholder="Simfoni &lt;em&gt;Tekstur&lt;/em&gt;&lt;br&gt;&amp; Waktu..."></textarea>
+                  <p class="hint">Gunakan &lt;em&gt; untuk teks miring dan &lt;br&gt; untuk baris baru</p>
+                </div>
+                
+                <div class="form-group">
+                  <label>Deskripsi</label>
+                  <textarea id="heroDesc" rows="3" placeholder="Deskripsi hero section..."></textarea>
+                </div>
+                
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Tombol Utama</label>
+                    <input type="text" id="heroBtn1Text" placeholder="Text">
+                    <input type="text" id="heroBtn1Link" placeholder="Link" style="margin-top: 0.5rem;">
+                  </div>
+                  <div class="form-group">
+                    <label>Tombol Sekunder</label>
+                    <input type="text" id="heroBtn2Text" placeholder="Text">
+                    <input type="text" id="heroBtn2Link" placeholder="Link" style="margin-top: 0.5rem;">
+                  </div>
+                </div>
+                
+                <h3 style="margin: 1.5rem 0 1rem; color: var(--brown);">📷 Gambar</h3>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Gambar Utama</label>
+                    <div class="image-upload" onclick="document.getElementById('heroMainImg').click()">
+                      <input type="file" id="heroMainImg" accept="image/*">
+                      <div class="image-upload__icon">📁</div>
+                      <div class="image-upload__text">Klik untuk upload atau <span>drag file</span></div>
+                      <div class="image-preview" id="heroMainPreview"></div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Gambar Sekunder</label>
+                    <div class="image-upload" onclick="document.getElementById('heroSecImg').click()">
+                      <input type="file" id="heroSecImg" accept="image/*">
+                      <div class="image-upload__icon">📁</div>
+                      <div class="image-upload__text">Klik untuk upload atau <span>drag file</span></div>
+                      <div class="image-preview" id="heroSecPreview"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <h3 style="margin: 1.5rem 0 1rem; color: var(--brown);">📈 Statistik</h3>
+                <div id="heroStats">
+                  <!-- Stats will be populated by JS -->
+                </div>
+                
+                <button type="submit" class="btn btn--primary" style="margin-top: 1.5rem;">💾 Simpan Perubahan</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Kategori Section -->
+        <section id="section-kategori" class="section-content">
+          <div class="section-panel">
+            <div class="section-panel__header">
+              <h2 class="section-panel__title"><span class="icon">📁</span> Kategori</h2>
+              <button class="btn btn--primary" onclick="openModal('kategoriModal')">+ Tambah Kategori</button>
+            </div>
+            <div class="section-panel__body">
+              <form id="kategoriForm">
+                <div class="form-group">
+                  <label>Label</label>
+                  <input type="text" id="kategoriLabel" placeholder="Apa yang kami buat">
+                </div>
+                <div class="form-group">
+                  <label>Judul</label>
+                  <textarea id="kategoriTitle" rows="2" placeholder="Pilih bentuk yang<br>menemani hari Anda."></textarea>
+                </div>
+                <button type="submit" class="btn btn--primary">💾 Simpan</button>
+              </form>
+              
+              <h3 style="margin: 2rem 0 1rem; color: var(--brown);">Daftar Kategori</h3>
+              <div class="collection-list" id="kategoriList">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Koleksi Section -->
+        <section id="section-koleksi" class="section-content">
+          <div class="section-panel">
+            <div class="section-panel__header">
+              <h2 class="section-panel__title"><span class="icon">🛍️</span> Koleksi Produk</h2>
+              <button class="btn btn--primary" onclick="openModal('produkModal')">+ Tambah Produk</button>
+            </div>
+            <div class="section-panel__body">
+              <form id="koleksiForm">
+                <div class="form-group">
+                  <label>Label</label>
+                  <input type="text" id="koleksiLabel" placeholder="Produk unggulan">
+                </div>
+                <div class="form-group">
+                  <label>Judul</label>
+                  <textarea id="koleksiTitle" rows="2" placeholder="Koleksi yang dijahit<br>tangan dengan hati."></textarea>
+                </div>
+                <button type="submit" class="btn btn--primary">💾 Simpan</button>
+              </form>
+              
+              <h3 style="margin: 2rem 0 1rem; color: var(--brown);">Daftar Produk</h3>
+              <div class="collection-list" id="produkList">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Cerita Section -->
+        <section id="section-cerita" class="section-content">
+          <div class="section-panel">
+            <div class="section-panel__header">
+              <h2 class="section-panel__title"><span class="icon">📖</span> Cerita / About</h2>
+              <div class="section-toggle">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="ceritaEnabled" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+                <span>Aktif</span>
+              </div>
+            </div>
+            <div class="section-panel__body">
+              <form id="ceritaForm">
+                <div class="form-group">
+                  <label>Label</label>
+                  <input type="text" id="ceritaLabel" placeholder="Filosofi kami">
+                </div>
+                
+                <div class="form-group">
+                  <label>Judul (support HTML)</label>
+                  <textarea id="ceritaTitle" rows="3" placeholder="Di balik setiap<br>jahitan, ada..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label>Paragraf 1</label>
+                  <textarea id="ceritaBody1" rows="4" placeholder="Paragraf pertama..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label>Paragraf 2</label>
+                  <textarea id="ceritaBody2" rows="4" placeholder="Paragraf kedua..."></textarea>
+                </div>
+                
+                <h3 style="margin: 1.5rem 0 1rem; color: var(--brown);">📷 Gambar</h3>
+                <div class="form-group">
+                  <label>URL Gambar</label>
+                  <input type="text" id="ceritaImage" placeholder="https://images.unsplash.com/...">
+                  <p class="hint">Masukkan URL gambar atau upload file</p>
+                  <div class="image-upload" onclick="document.getElementById('ceritaImgUpload').click()" style="margin-top: 0.5rem;">
+                    <input type="file" id="ceritaImgUpload" accept="image/*">
+                    <div class="image-upload__icon">📁</div>
+                    <div class="image-upload__text">Upload Gambar</div>
+                    <div class="image-preview" id="ceritaImagePreview"></div>
+                  </div>
+                </div>
+                
+                <h3 style="margin: 1.5rem 0 1rem; color: var(--brown);">Accent Card</h3>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Angka</label>
+                    <input type="text" id="ceritaAccentNum" placeholder="28">
+                  </div>
+                  <div class="form-group">
+                    <label>Deskripsi</label>
+                    <input type="text" id="ceritaAccentText" placeholder="Pengrajin berpengalaman...">
+                  </div>
+                </div>
+                
+                <h3 style="margin: 1.5rem 0 1rem; color: var(--brown);">Statistik</h3>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Angka 1</label>
+                    <input type="text" id="ceritaStat1Num" placeholder="12">
+                    <input type="text" id="ceritaStat1Label" placeholder="Tahun berdiri" style="margin-top: 0.5rem;">
+                  </div>
+                  <div class="form-group">
+                    <label>Angka 2</label>
+                    <input type="text" id="ceritaStat2Num" placeholder="3K+">
+                    <input type="text" id="ceritaStat2Label" placeholder="Karya terjual" style="margin-top: 0.5rem;">
+                  </div>
+                </div>
+                
+                <h3 style="margin: 1.5rem 0 1rem; color: var(--brown);">CTA Button</h3>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Text</label>
+                    <input type="text" id="ceritaCtaText" placeholder="Kenali Lebih Jauh">
+                  </div>
+                  <div class="form-group">
+                    <label>Link</label>
+                    <input type="text" id="ceritaCtaLink" placeholder="#kontak">
+                  </div>
+                </div>
+                
+                <button type="submit" class="btn btn--primary" style="margin-top: 1.5rem;">💾 Simpan Perubahan</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Ulasan Section -->
+        <section id="section-ulasan" class="section-content">
+          <div class="section-panel">
+            <div class="section-panel__header">
+              <h2 class="section-panel__title"><span class="icon">💬</span> Ulasan / Testimonial</h2>
+              <button class="btn btn--primary" onclick="openModal('ulasanModal')">+ Tambah Ulasan</button>
+            </div>
+            <div class="section-panel__body">
+              <form id="ulasanForm">
+                <div class="form-group">
+                  <label>Label</label>
+                  <input type="text" id="ulasanLabel" placeholder="Dari mereka">
+                </div>
+                <div class="form-group">
+                  <label>Judul</label>
+                  <textarea id="ulasanTitle" rows="2" placeholder="Suara dari mereka<br>yang memakai kami."></textarea>
+                </div>
+                <button type="submit" class="btn btn--primary">💾 Simpan</button>
+              </form>
+              
+              <h3 style="margin: 2rem 0 1rem; color: var(--brown);">Daftar Testimonial</h3>
+              <div class="testimonial-list" id="ulasanList">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section id="section-cta" class="section-content">
+          <div class="section-panel">
+            <div class="section-panel__header">
+              <h2 class="section-panel__title"><span class="icon">📢</span> CTA Section</h2>
+              <div class="section-toggle">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="ctaEnabled" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+                <span>Aktif</span>
+              </div>
+            </div>
+            <div class="section-panel__body">
+              <form id="ctaForm">
+                <div class="form-group">
+                  <label>Label</label>
+                  <input type="text" id="ctaLabel" placeholder="Siap bergabung?">
+                </div>
+                
+                <div class="form-group">
+                  <label>Judul (support HTML)</label>
+                  <textarea id="ctaTitle" rows="3" placeholder="Mulai cerita<br>Anda bersama<br><em>kami.</em>"></textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label>Deskripsi</label>
+                  <textarea id="ctaDesc" rows="2" placeholder="Jadikan setiap hari lebih bermakna..."></textarea>
+                </div>
+                
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Text Tombol</label>
+                    <input type="text" id="ctaBtnText" placeholder="Mulai Berbelanja">
+                  </div>
+                  <div class="form-group">
+                    <label>Link Tombol</label>
+                    <input type="text" id="ctaBtnLink" placeholder="#koleksi">
+                  </div>
+                </div>
+                
+                <button type="submit" class="btn btn--primary" style="margin-top: 1.5rem;">💾 Simpan Perubahan</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Footer Section -->
+        <section id="section-footer" class="section-content">
+          <div class="section-panel">
+            <div class="section-panel__header">
+              <h2 class="section-panel__title"><span class="icon">📋</span> Footer</h2>
+            </div>
+            <div class="section-panel__body">
+              <form id="footerForm">
+                <h3 style="margin: 0 0 1rem; color: var(--brown);">Brand Info</h3>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Logo Text</label>
+                    <input type="text" id="footerLogo" placeholder="Kulit Karya">
+                  </div>
+                  <div class="form-group">
+                    <label>Tagline</label>
+                    <textarea id="footerTagline" rows="2" placeholder="Kerajinan tangan premium..."></textarea>
+                  </div>
+                </div>
+                
+                <h3 style="margin: 1.5rem 0 1rem; color: var(--brown);">Social Media</h3>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Instagram URL</label>
+                    <input type="text" id="footerInstagram" placeholder="https://instagram.com/...">
+                  </div>
+                  <div class="form-group">
+                    <label>Facebook URL</label>
+                    <input type="text" id="footerFacebook" placeholder="https://facebook.com/...">
+                  </div>
+                  <div class="form-group">
+                    <label>WhatsApp URL</label>
+                    <input type="text" id="footerWhatsapp" placeholder="https://wa.me/...">
+                  </div>
+                </div>
+                
+                <h3 style="margin: 1.5rem 0 1rem; color: var(--brown);">Kontak</h3>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Email</label>
+                    <input type="text" id="footerEmail" placeholder="hello@example.com">
+                  </div>
+                  <div class="form-group">
+                    <label>Telepon</label>
+                    <input type="text" id="footerPhone" placeholder="+62 812-345-678">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Alamat</label>
+                  <textarea id="footerAddress" rows="2" placeholder="Jl. Kerajinan No. 14..."></textarea>
+                </div>
+                
+                <h3 style="margin: 1.5rem 0 1rem; color: var(--brown);">Copyright</h3>
+                <div class="form-group">
+                  <label>Text Copyright</label>
+                  <input type="text" id="footerCopyright" placeholder="© 2025 Kulit Karya. Semua hak dilindungi.">
+                </div>
+                
+                <button type="submit" class="btn btn--primary" style="margin-top: 1.5rem;">💾 Simpan Perubahan</button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <!-- Kategori Modal -->
+  <div class="modal-overlay" id="kategoriModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title">Tambah Kategori</h3>
+        <button class="modal__close" onclick="closeModal('kategoriModal')">×</button>
+      </div>
+      <div class="modal__body">
+        <form id="addKategoriForm">
+          <div class="form-group">
+            <label>Nama Kategori</label>
+            <input type="text" id="newKategoriName" required placeholder="Contoh: Tas">
+          </div>
+          <div class="form-group">
+            <label>Gambar</label>
+            <input type="text" id="newKategoriImage" placeholder="URL gambar atau path file">
+            <p class="hint">Contoh: ./asset/tas sc.png</p>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--secondary" onclick="closeModal('kategoriModal')">Batal</button>
+        <button class="btn btn--primary" onclick="saveNewKategori()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Produk Modal -->
+  <div class="modal-overlay" id="produkModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title" id="produkModalTitle">Tambah Produk</h3>
+        <button class="modal__close" onclick="closeModal('produkModal')">×</button>
+      </div>
+      <div class="modal__body">
+        <form id="addProdukForm">
+          <input type="hidden" id="editProdukId">
+          <div class="form-group">
+            <label>Nama Produk</label>
+            <input type="text" id="newProdukName" required placeholder="Contoh: Tas Kulit Premium">
+          </div>
+          <div class="form-group">
+            <label>Kategori / Deskripsi Singkat</label>
+            <input type="text" id="newProdukCategory" placeholder="Contoh: Full Grain Leather">
+          </div>
+          <div class="form-group">
+            <label>Gambar</label>
+            <input type="text" id="newProdukImage" placeholder="URL gambar atau path file">
+            <p class="hint">Contoh: ./asset/tas kulit.png</p>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--secondary" onclick="closeModal('produkModal')">Batal</button>
+        <button class="btn btn--primary" onclick="saveNewProduk()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ulasan Modal -->
+  <div class="modal-overlay" id="ulasanModal">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title" id="ulasanModalTitle">Tambah Ulasan</h3>
+        <button class="modal__close" onclick="closeModal('ulasanModal')">×</button>
+      </div>
+      <div class="modal__body">
+        <form id="addUlasanForm">
+          <input type="hidden" id="editUlasanId">
+          <div class="form-group">
+            <label>Jumlah Bintang</label>
+            <select id="newUlasanStars">
+              <option value="5">★★★★★ (5)</option>
+              <option value="4">★★★★☆ (4)</option>
+              <option value="3">★★★☆☆ (3)</option>
+              <option value="2">★★☆☆☆ (2)</option>
+              <option value="1">★☆☆☆☆ (1)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quote / Testimonial</label>
+            <textarea id="newUlasanQuote" rows="3" placeholder="Isi testimonial..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Nama</label>
+            <input type="text" id="newUlasanName" placeholder="Nama lengkap">
+          </div>
+          <div class="form-group">
+            <label>Role / Jabatan</label>
+            <input type="text" id="newUlasanRole" placeholder="Contoh: Pengusaha, Jakarta">
+          </div>
+          <div class="form-group">
+            <label>Warna Avatar (hex)</label>
+            <input type="text" id="newUlasanColor" placeholder="#c8b89a">
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--secondary" onclick="closeModal('ulasanModal')">Batal</button>
+        <button class="btn btn--primary" onclick="saveNewUlasan()">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
