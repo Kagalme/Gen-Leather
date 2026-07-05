@@ -1460,9 +1460,16 @@ body {
             <input type="text" id="newProdukCategory" placeholder="Contoh: Full Grain Leather">
           </div>
           <div class="form-group">
-            <label>Gambar</label>
-            <input type="text" id="newProdukImage" placeholder="URL gambar atau path file">
-            <p class="hint">Contoh: ./asset/tas kulit.png</p>
+            <label>Gambar Produk</label>
+            <input type="hidden" id="newProdukImage" placeholder="URL gambar">
+            <div class="image-upload" id="produkImageUpload" onclick="document.getElementById('newProdukImageFile').click()">
+              <input type="file" id="newProdukImageFile" accept="image/*" style="display:none;">
+              <div class="image-upload__icon">📷</div>
+              <div class="image-upload__text">Klik untuk upload atau <span>drag file</span></div>
+              <div class="image-preview" id="produkImagePreview"></div>
+            </div>
+            <p class="hint">Atau masukkan URL gambar:</p>
+            <input type="text" id="newProdukImageUrl" placeholder="https://example.com/gambar.png" style="margin-top: 0.5rem;">
           </div>
         </form>
       </div>
@@ -2137,7 +2144,10 @@ function saveKoleksi(e) {
 function saveNewProduk() {
   const name = document.getElementById('newProdukName').value;
   const category = document.getElementById('newProdukCategory').value;
-  const image = document.getElementById('newProdukImage').value || './asset/placeholder.png';
+  // Prioritas: uploaded image (base64) > URL input > default
+  const uploadedImage = document.getElementById('newProdukImage').value;
+  const urlImage = document.getElementById('newProdukImageUrl').value;
+  const image = uploadedImage || urlImage || './asset/placeholder.png';
   const editId = document.getElementById('editProdukId').value;
   
   if (!name) {
@@ -2165,6 +2175,8 @@ function saveNewProduk() {
   document.getElementById('newProdukName').value = '';
   document.getElementById('newProdukCategory').value = '';
   document.getElementById('newProdukImage').value = '';
+  document.getElementById('newProdukImageUrl').value = '';
+  document.getElementById('produkImagePreview').innerHTML = '';
 }
 
 function editProduk(id) {
@@ -2175,7 +2187,12 @@ function editProduk(id) {
     document.getElementById('editProdukId').value = id;
     document.getElementById('newProdukName').value = product.name;
     document.getElementById('newProdukCategory').value = product.category;
-    document.getElementById('newProdukImage').value = product.image;
+    document.getElementById('newProdukImage').value = '';
+    document.getElementById('newProdukImageUrl').value = product.image;
+    // Show preview if it's a URL
+    if (product.image && !product.image.startsWith('data:')) {
+      showImagePreview('produkImagePreview', product.image);
+    }
     document.getElementById('produkModalTitle').textContent = 'Edit Produk';
     openModal('produkModal');
   }
@@ -2452,10 +2469,15 @@ function initializeImageUploads() {
       const file = this.files[0];
       if (file) {
         const reader = new FileReader();
-        const previewId = this.id.replace('Img', '') + 'Preview';
+        // For produk modal, use different preview ID logic
+        const previewId = this.id === 'newProdukImageFile' ? 'produkImagePreview' : this.id.replace('Img', '') + 'Preview';
         
         reader.onload = function(e) {
           showImagePreview(previewId, e.target.result);
+          // For produk modal, also update hidden input
+          if (previewId === 'produkImagePreview') {
+            document.getElementById('newProdukImage').value = e.target.result;
+          }
         };
         
         reader.readAsDataURL(file);
@@ -2485,10 +2507,14 @@ function initializeImageUploads() {
       if (file && file.type.startsWith('image/')) {
         fileInput.files = e.dataTransfer.files;
         const reader = new FileReader();
-        const previewId = fileInput.id.replace('Img', '') + 'Preview';
+        const previewId = fileInput.id === 'newProdukImageFile' ? 'produkImagePreview' : fileInput.id.replace('Img', '') + 'Preview';
         
         reader.onload = function(ev) {
           showImagePreview(previewId, ev.target.result);
+          // For produk modal, also update hidden input
+          if (previewId === 'produkImagePreview') {
+            document.getElementById('newProdukImage').value = ev.target.result;
+          }
         };
         
         reader.readAsDataURL(file);
