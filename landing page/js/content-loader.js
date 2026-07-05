@@ -4,6 +4,8 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Initialize data first
+  ContentManager.init();
   loadDynamicContent();
 });
 

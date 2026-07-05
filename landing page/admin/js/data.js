@@ -150,8 +150,18 @@ const ContentManager = {
     }
   },
   
+  // Initialize with default data if empty
+  init() {
+    if (!localStorage.getItem(this.STORAGE_KEY)) {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.defaultData));
+    }
+  },
+  
   // Get all content
   getAll() {
+    // Auto-initialize if needed
+    this.init();
+    
     const stored = localStorage.getItem(this.STORAGE_KEY);
     if (stored) {
       try {
