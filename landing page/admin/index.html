@@ -39,8 +39,12 @@ body {
 
 /* Layout */
 .dashboard {
-  display: flex;
+  display: none;
   min-height: 100vh;
+}
+
+.dashboard.authenticated {
+  display: flex;
 }
 
 /* Sidebar */
@@ -853,10 +857,115 @@ body {
 .section-content.active {
   display: block;
 }
+
+/* Login Screen Styles */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, var(--brown-2) 0%, var(--dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.login-card {
+  background: rgba(58, 44, 30, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(184, 147, 90, 0.2);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  animation: loginFadeIn 0.5s ease-out;
+  color: var(--cream);
+}
+
+@keyframes loginFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.login-card__logo {
+  font-family: 'Georgia', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.login-card__subtitle {
+  font-size: 0.85rem;
+  color: var(--cream-2);
+  text-align: center;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+.login-card .form-group label {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.login-card .form-group input {
+  background: rgba(26, 18, 9, 0.6);
+  border: 1.5px solid rgba(184, 147, 90, 0.25);
+  color: var(--white);
+  transition: all 0.3s;
+}
+
+.login-card .form-group input::placeholder {
+  color: rgba(247, 243, 238, 0.4);
+}
+
+.login-card .form-group input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(184, 147, 90, 0.2);
+}
+
+.login-card__footer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-lt);
+  margin-top: 1.5rem;
+  opacity: 0.7;
+}
   </style>
 </head>
 
 <body>
+  <!-- Login Screen -->
+  <div class="login-screen" id="loginScreen" style="display: none;">
+    <div class="login-card">
+      <div class="login-card__logo">GenLeather Admin</div>
+      <p class="login-card__subtitle">Silakan masuk untuk mengelola konten landing page Anda.</p>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="loginUsername" required placeholder="Masukkan username">
+        </div>
+        <div class="form-group" style="margin-bottom: 2rem;">
+          <label>Password</label>
+          <input type="password" id="loginPassword" required placeholder="Masukkan password">
+        </div>
+        <button type="submit" class="btn btn--primary btn--block">Masuk 🔒</button>
+      </form>
+      <div class="login-card__footer">Default: admin / admin123</div>
+    </div>
+  </div>
+
   <div class="dashboard">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
@@ -874,6 +983,7 @@ body {
           <li><a href="#footer" class="nav-item" data-section="footer"><span class="icon">📋</span> Footer</a></li>
           <div class="sidebar__divider"></div>
           <li><a href="../index.html" target="_blank"><span class="icon">👁️</span> Lihat Website</a></li>
+          <li><a href="#" id="logoutBtn" style="color: var(--danger);"><span class="icon">🚪</span> Keluar</a></li>
         </ul>
       </nav>
     </aside>
@@ -1691,14 +1801,68 @@ window.ContentManager = ContentManager;
  */
 
 // ============================================================
+// Authentication Logic
+// ============================================================
+const AUTH_KEY = 'genleather_auth';
+
+function checkAuth() {
+  const isAuthenticated = sessionStorage.getItem(AUTH_KEY) === 'true';
+  const loginScreen = document.getElementById('loginScreen');
+  const dashboard = document.querySelector('.dashboard');
+  
+  if (isAuthenticated) {
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (dashboard) dashboard.classList.add('authenticated');
+  } else {
+    if (loginScreen) loginScreen.style.display = 'flex';
+    if (dashboard) dashboard.classList.remove('authenticated');
+  }
+}
+
+function initializeAuth() {
+  const loginForm = document.getElementById('loginForm');
+  const logoutBtn = document.getElementById('logoutBtn');
+  
+  if (loginForm) {
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+      
+      // Simple client-side auth
+      if (username === 'admin' && password === 'admin123') {
+        sessionStorage.setItem(AUTH_KEY, 'true');
+        checkAuth();
+        showToast('Login berhasil!', 'success');
+      } else {
+        showToast('Username atau password salah!', 'error');
+      }
+    });
+  }
+  
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (confirm('Yakin ingin keluar?')) {
+        sessionStorage.removeItem(AUTH_KEY);
+        checkAuth();
+        showToast('Logout berhasil!', 'success');
+      }
+    });
+  }
+}
+
+// ============================================================
 // Initialization
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
+  checkAuth();
   initializeNavigation();
   loadAllData();
   initializeForms();
   initializeImageUploads();
   initializeReset();
+  initializeAuth();
 });
 
 // ============================================================
