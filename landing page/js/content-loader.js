@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function loadDynamicContent() {
   const data = ContentManager.getAll();
+  console.log('Loading dynamic content:', data);
   
   // Load Hero
   loadHeroContent(data.hero);
@@ -123,6 +124,8 @@ function loadKategoriContent(kategori) {
 }
 
 function loadKoleksiContent(koleksi) {
+  console.log('Loading koleksi content:', koleksi);
+  
   if (!koleksi.enabled) {
     const koleksiSection = document.getElementById('koleksi');
     if (koleksiSection) koleksiSection.style.display = 'none';
@@ -142,18 +145,28 @@ function loadKoleksiContent(koleksi) {
   // Products Grid
   const grid = document.querySelector('.koleksi__grid');
   if (grid) {
-    grid.innerHTML = koleksi.products.map((product, index) => `
-      <div class="koleksi__card fade-up" style="--d:${0.1 * (index + 1)}s">
-        <div class="koleksi__img">
-          <img src="${product.image}" alt="${product.name}" />
-          <div class="koleksi__overlay"><span>Lihat Detail</span></div>
+    // Ensure products is an array
+    const products = koleksi.products || [];
+    console.log('Products to render:', products.length);
+    
+    if (products.length > 0) {
+      grid.innerHTML = products.map((product, index) => `
+        <div class="koleksi__card fade-up" style="--d:${0.1 * (index + 1)}s">
+          <div class="koleksi__img">
+            <img src="${product.image}" alt="${product.name}" onerror="this.style.display='none'" />
+            <div class="koleksi__overlay"><span>Lihat Detail</span></div>
+          </div>
+          <div class="koleksi__info">
+            <p class="koleksi__name">${product.name}</p>
+            <p class="koleksi__sub">${product.category}</p>
+          </div>
         </div>
-        <div class="koleksi__info">
-          <p class="koleksi__name">${product.name}</p>
-          <p class="koleksi__sub">${product.category}</p>
-        </div>
-      </div>
-    `).join('');
+      `).join('');
+    } else {
+      console.log('No products found, keeping default HTML');
+    }
+  } else {
+    console.error('Grid element not found');
   }
 }
 
@@ -209,18 +222,18 @@ function loadCeritaContent(cerita) {
 
 function loadUlasanContent(ulasan) {
   if (!ulasan.enabled) {
-    const ulasanSection = document.getElementById('ulasan');
-    if (ulasanSection) ulasanSection.style.display = 'none';
+    const section = document.getElementById('ulasan');
+    if (section) section.style.display = 'none';
     return;
   }
   
-  const ulasanSection = document.getElementById('ulasan');
-  if (ulasanSection) {
+  const section = document.getElementById('ulasan');
+  if (section) {
     // Label & Title
-    const label = ulasanSection.querySelector('.label');
+    const label = section.querySelector('.label');
     if (label) label.textContent = ulasan.label;
     
-    const title = ulasanSection.querySelector('.section-title');
+    const title = section.querySelector('.section-title');
     if (title) title.innerHTML = ulasan.title;
   }
   
