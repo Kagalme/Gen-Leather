@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeForms();
   initializeImageUploads();
   initializeReset();
+  initializeModals();
 });
 
 // ============================================================
@@ -671,6 +672,90 @@ function getImagePreviewSrc(containerId) {
 // ============================================================
 // Modal
 // ============================================================
+function initializeModals() {
+  // Close modal on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('active');
+      }
+    });
+  });
+  
+  // Initialize image upload for modals
+  initializeModalImageUpload('kategoriModal', 'newKategoriImage', 'kategoriImagePreview');
+  initializeModalImageUpload('produkModal', 'newProdukImage', 'produkImagePreview');
+}
+
+function initializeModalImageUpload(modalId, inputId, previewId) {
+  const input = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  
+  if (!input || !preview) return;
+  
+  // Create hidden file input for upload
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  fileInput.id = inputId + 'File';
+  
+  // Replace text input with clickable area
+  const uploadArea = document.createElement('div');
+  uploadArea.className = 'image-upload';
+  uploadArea.innerHTML = `
+    <div class="image-upload__icon">📁</div>
+    <div class="image-upload__text">Klik untuk upload atau <span>drag file</span></div>
+    <div class="image-preview" id="${previewId}"></div>
+  `;
+  
+  uploadArea.addEventListener('click', () => fileInput.click());
+  
+  // Replace original input container
+  input.parentElement.appendChild(fileInput);
+  input.parentElement.insertBefore(uploadArea, input);
+  input.style.display = 'none';
+  
+  // File input change handler
+  fileInput.addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        ImageUploader.showPreview(previewId, e.target.result);
+        input.value = e.target.result; // Store base64 in the hidden input
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  
+  // Drag and drop
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+  
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+  });
+  
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      fileInput.files = e.dataTransfer.files;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        ImageUploader.showPreview(previewId, ev.target.result);
+        input.value = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
 function openModal(modalId) {
   document.getElementById(modalId).classList.add('active');
 }
@@ -678,15 +763,6 @@ function openModal(modalId) {
 function closeModal(modalId) {
   document.getElementById(modalId).classList.remove('active');
 }
-
-// Close modal on overlay click
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', function(e) {
-    if (e.target === this) {
-      this.classList.remove('active');
-    }
-  });
-});
 
 // ============================================================
 // Reset
