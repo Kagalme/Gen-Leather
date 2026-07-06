@@ -1,18 +1,17 @@
 /**
  * GenLeather Image Uploader Module
- * Handles image upload, compression, and storage
- * Uses localStorage with base64 encoding for persistence
+ * Handles image upload, compression, and IndexedDB storage
+ * Images are stored as blobs with logical paths to ./asset/
  */
 
 const ImageUploader = {
   // Configuration
   config: {
-    maxFileSize: 2 * 1024 * 1024, // 2MB max
-    maxLocalStorageSize: 4 * 1024 * 1024, // 4MB for images
+    maxFileSize: 5 * 1024 * 1024, // 5MB max
     supportedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-    quality: 0.7, // Compression quality
+    quality: 0.8, // Compression quality
     maxDimension: 1200, // Max width/height
-    storagePrefix: 'img_'
+    assetPath: './asset/' // Logical path prefix
   },
 
   /**
@@ -21,24 +20,31 @@ const ImageUploader = {
   init(inputElement, options = {}) {
     const config = { ...this.config, ...options };
     const previewId = options.previewId || inputElement.id.replace('Img', '') + 'Preview';
+    const section = options.section || 'general';
     
     inputElement.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (file) {
-        await this.handleFileUpload(file, previewId, config, options.onSuccess);
+        await this.handleFileUpload(file, previewId, config, {
+          ...options,
+          section
+        });
       }
     });
 
     // Setup drag and drop if container provided
     if (options.dropContainer) {
-      this.setupDragDrop(options.dropContainer, inputElement, previewId, config, options.onSuccess);
+      this.setupDragDrop(options.dropContainer, inputElement, previewId, config, {
+        ...options,
+        section
+      });
     }
   },
 
   /**
    * Setup drag and drop functionality
    */
-  setupDragDrop(container, inputElement, previewId, config, callback) {
+  setupDragDrop(container, inputElement, previewId, config, options) {
     container.addEventListener('dragover', (e) => {
       e.preventDefault();
       container.classList.add('dragover');
@@ -55,7 +61,7 @@ const ImageUploader = {
       const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith('image/')) {
         inputElement.files = e.dataTransfer.files;
-        await this.handleFileUpload(file, previewId, config, callback);
+        await this.handleFileUpload(file, previewId, config, options);
       }
     });
   },
@@ -63,7 +69,7 @@ const ImageUploader = {
   /**
    * Handle file upload process
    */
-  async handleFileUpload(file, previewId, config, callback) {
+  async handleFileUpload(file, previewId, config, options = {}) {
     // Validate file type
     if (!config.supportedTypes.includes(file.type)) {
       this.showError('Tipe file tidak didukung. Gunakan JPG, PNG, GIF, atau WebP.');
@@ -80,20 +86,44 @@ const ImageUploader = {
       // Show loading state
       this.showLoading(previewId);
 
-      // Compress and convert to base64
-      const base64 = await this.processImage(file, config);
+      // Compress image
+      const { blob, dataUrl } = await this.processImage(file, config);
       
-      // Store in localStorage
-      const storageKey = config.storagePrefix + previewId;
-      this.saveToStorage(storageKey, base64);
+      // Generate unique filename
+      const extension = file.type.split('/')[1];
+      const originalName = file.name.replace(/\.[^/.]+$/, '');
+      const filename = this.generateFilename(originalName, extension);
+      const logicalPath = config.assetPath + filename;
+
+      // Store in IndexedDB
+      const imageData = {
+        filename,
+        original_name: file.name,
+        path: logicalPath,
+        size: blob.size,
+        mime_type: file.type,
+        width: config.maxDimension,
+        height: config.maxDimension,
+        used_in: options.section || 'general',
+        blob: blob // Store actual image data
+      };
+
+      const savedImage = await GenLeatherDB.addImage(imageData);
 
       // Show preview
-      this.showPreview(previewId, base64);
+      this.showPreview(previewId, dataUrl, savedImage.id);
 
       // Callback
-      if (callback) callback(base64);
+      if (options.onSuccess) {
+        options.onSuccess({
+          id: savedImage.id,
+          filename,
+          path: logicalPath,
+          blobUrl: dataUrl
+        });
+      }
 
-      return base64;
+      return savedImage;
     } catch (error) {
       console.error('Image upload error:', error);
       this.showError('Gagal mengupload gambar. Silakan coba lagi.');
@@ -102,7 +132,7 @@ const ImageUploader = {
   },
 
   /**
-   * Process image - compress and convert to base64
+   * Process image - compress and return blob + dataUrl
    */
   processImage(file, config) {
     return new Promise((resolve, reject) => {
@@ -117,10 +147,10 @@ const ImageUploader = {
           
           if (width > config.maxDimension || height > config.maxDimension) {
             if (width > height) {
-              height = (height / width) * config.maxDimension;
+              height = Math.round((height / width) * config.maxDimension);
               width = config.maxDimension;
             } else {
-              width = (width / height) * config.maxDimension;
+              width = Math.round((width / height) * config.maxDimension);
               height = config.maxDimension;
             }
           }
@@ -133,9 +163,15 @@ const ImageUploader = {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
           
-          // Convert to base64 with compression
-          const base64 = canvas.toDataURL(file.type, config.quality);
-          resolve(base64);
+          // Convert to blob and dataUrl
+          canvas.toBlob(
+            (blob) => {
+              const dataUrl = canvas.toDataURL(file.type, config.quality);
+              resolve({ blob, dataUrl });
+            },
+            file.type,
+            config.quality
+          );
         };
         
         img.onerror = reject;
@@ -148,56 +184,24 @@ const ImageUploader = {
   },
 
   /**
-   * Save image to localStorage
+   * Generate unique filename
    */
-  saveToStorage(key, base64) {
-    try {
-      localStorage.setItem(key, base64);
-    } catch (e) {
-      // If storage is full, try to clear old images
-      this.clearOldImages();
-      try {
-        localStorage.setItem(key, base64);
-      } catch (e2) {
-        console.error('localStorage is full even after cleanup');
-      }
-    }
+  generateFilename(originalName, extension) {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    const safeName = originalName.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 20);
+    return `${safeName}-${timestamp}-${random}.${extension}`;
   },
 
   /**
-   * Get image from localStorage
+   * Show image preview with remove button
    */
-  getFromStorage(key) {
-    return localStorage.getItem(key);
-  },
-
-  /**
-   * Clear old/unused images from storage
-   */
-  clearOldImages() {
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(this.config.storagePrefix)) {
-        // Check if it's older than 7 days (using timestamp)
-        const data = localStorage.getItem(key);
-        if (data && data.length > 500000) { // Large image > 500KB
-          keysToRemove.push(key);
-        }
-      }
-    }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-  },
-
-  /**
-   * Show image preview
-   */
-  showPreview(containerId, src) {
+  showPreview(containerId, src, imageId) {
     const container = document.getElementById(containerId);
     if (container) {
       container.innerHTML = `
-        <img src="${src}" alt="Preview">
-        <button class="remove-btn" type="button" onclick="ImageUploader.removePreview('${containerId}')">×</button>
+        <img src="${src}" alt="Preview" data-image-id="${imageId}">
+        <button class="remove-btn" type="button" onclick="ImageUploader.removePreview('${containerId}', ${imageId})">×</button>
       `;
     }
   },
@@ -205,10 +209,20 @@ const ImageUploader = {
   /**
    * Remove image preview
    */
-  removePreview(containerId) {
+  async removePreview(containerId, imageId) {
     const container = document.getElementById(containerId);
     if (container) {
       container.innerHTML = '';
+    }
+    
+    // Delete from IndexedDB if imageId exists
+    if (imageId) {
+      try {
+        await GenLeatherDB.deleteImage(imageId);
+        console.log('Image deleted from database:', imageId);
+      } catch (error) {
+        console.error('Error deleting image:', error);
+      }
     }
   },
 
@@ -238,14 +252,35 @@ const ImageUploader = {
   },
 
   /**
-   * Get image src from preview container
+   * Get image data from database
    */
-  getImageSrc(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) return null;
-    
-    const img = container.querySelector('img');
-    return img ? img.src : null;
+  async getImage(imageId) {
+    return await GenLeatherDB.getImageById(imageId);
+  },
+
+  /**
+   * Get all images
+   */
+  async getAllImages() {
+    return await GenLeatherDB.getAllImages();
+  },
+
+  /**
+   * Get images by section
+   */
+  async getImagesBySection(section) {
+    return await GenLeatherDB.getImagesBySection(section);
+  },
+
+  /**
+   * Load image from IndexedDB and create URL
+   */
+  async loadImageUrl(imageId) {
+    const imageData = await this.getImage(imageId);
+    if (imageData && imageData.blob) {
+      return URL.createObjectURL(imageData.blob);
+    }
+    return null;
   },
 
   /**

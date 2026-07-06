@@ -1,38 +1,86 @@
 /**
  * Content Loader for GenLeather Landing Page
- * Loads content from localStorage and renders to the page
+ * Loads content from IndexedDB and renders to the page
+ * Falls back to static data if database is empty
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize data first
-  ContentManager.init();
+document.addEventListener('DOMContentLoaded', async function() {
+  // Wait for database to be ready
+  await GenLeatherDB.init();
+  
+  // Load dynamic content
   loadDynamicContent();
 });
 
 function loadDynamicContent() {
+  // Use ContentManager fallback data first (from data.js)
   const data = ContentManager.getAll();
-  console.log('Loading dynamic content:', data);
   
-  // Load Hero
-  loadHeroContent(data.hero);
-  
-  // Load Kategori
-  loadKategoriContent(data.kategori);
-  
-  // Load Koleksi
-  loadKoleksiContent(data.koleksi);
-  
-  // Load Cerita
-  loadCeritaContent(data.cerita);
-  
-  // Load Ulasan
-  loadUlasanContent(data.ulasan);
-  
-  // Load CTA
-  loadCtaContent(data.cta);
-  
-  // Load Footer
-  loadFooterContent(data.footer);
+  // Try to enhance with database images
+  enhanceWithDatabaseImages(data).then(() => {
+    console.log('Content loaded with database integration');
+  });
+}
+
+async function enhanceWithDatabaseImages(data) {
+  try {
+    // Get all images from database
+    const allImages = await GenLeatherDB.getAllImages();
+    
+    // If database has images, merge them
+    if (allImages && allImages.length > 0) {
+      console.log(`Found ${allImages.length} images in database`);
+      
+      // Group images by section
+      for (const img of allImages) {
+        if (img.blob && img.used_in) {
+          // Create blob URL for the image
+          const blobUrl = URL.createObjectURL(img.blob);
+          
+          switch (img.used_in) {
+            case 'hero':
+              if (img.field_key === 'image') data.hero.image = blobUrl;
+              if (img.field_key === 'secondaryImage') data.hero.secondaryImage = blobUrl;
+              break;
+            case 'kategori':
+              // Find matching kategori item
+              const katItem = data.kategori.items.find(i => i.id == img.id || i.name === img.original_name);
+              if (katItem) katItem.image = blobUrl;
+              break;
+            case 'koleksi':
+              // Find matching product
+              const product = data.koleksi.products.find(p => p.id == img.id || p.name === img.original_name);
+              if (product) product.image = blobUrl;
+              break;
+            case 'cerita':
+              if (img.field_key === 'image') data.cerita.image = blobUrl;
+              break;
+          }
+        }
+      }
+    }
+    
+    // Load content sections
+    loadHeroContent(data.hero);
+    loadKategoriContent(data.kategori);
+    loadKoleksiContent(data.koleksi);
+    loadCeritaContent(data.cerita);
+    loadUlasanContent(data.ulasan);
+    loadCtaContent(data.cta);
+    loadFooterContent(data.footer);
+    
+  } catch (error) {
+    console.error('Error enhancing with database:', error);
+    // Load with default data if database fails
+    const data = ContentManager.getAll();
+    loadHeroContent(data.hero);
+    loadKategoriContent(data.kategori);
+    loadKoleksiContent(data.koleksi);
+    loadCeritaContent(data.cerita);
+    loadUlasanContent(data.ulasan);
+    loadCtaContent(data.cta);
+    loadFooterContent(data.footer);
+  }
 }
 
 function loadHeroContent(hero) {
