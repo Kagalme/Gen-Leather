@@ -283,10 +283,11 @@ function saveKoleksi(e) {
   showToast('Koleksi berhasil disimpan!', 'success');
 }
 
-function saveNewProduk() {
+async function saveNewProduk() {
   const name = document.getElementById('newProdukName').value;
   const category = document.getElementById('newProdukCategory').value;
-  const image = document.getElementById('newProdukImage').value || './asset/placeholder.png';
+  // Get image from preview or URL input
+  let image = getImagePreviewSrc('produkImagePreview') || document.getElementById('newProdukImageUrl').value || './asset/placeholder.png';
   const editId = document.getElementById('editProdukId').value;
   
   if (!name) {
@@ -295,14 +296,23 @@ function saveNewProduk() {
   }
   
   if (editId) {
-    // Update existing
+    // Update existing - also save to IndexedDB if it's a blob URL
+    const imageData = await processAndSaveImage(image, 'koleksi', `product-${editId}`);
+    if (imageData) {
+      image = imageData.path || image;
+    }
     ContentManager.updateProduct(parseInt(editId), { name, category, image });
     document.getElementById('editProdukId').value = '';
     document.getElementById('produkModalTitle').textContent = 'Tambah Produk';
     showToast('Produk berhasil diupdate!', 'success');
   } else {
-    // Add new
-    ContentManager.addProduct({ name, category, image });
+    // Add new - also save to IndexedDB if it's a blob URL
+    const newId = Date.now();
+    const imageData = await processAndSaveImage(image, 'koleksi', `product-${newId}`);
+    if (imageData) {
+      image = imageData.path || image;
+    }
+    ContentManager.addProduct({ name, category, image, dbImageId: imageData?.id });
     showToast('Produk berhasil ditambahkan!', 'success');
   }
   
@@ -314,9 +324,48 @@ function saveNewProduk() {
   document.getElementById('newProdukName').value = '';
   document.getElementById('newProdukCategory').value = '';
   document.getElementById('newProdukImage').value = '';
+  document.getElementById('newProdukImageUrl').value = '';
+  document.getElementById('produkImagePreview').innerHTML = '';
 }
 
-function editProduk(id) {
+/**
+ * Process and save image to IndexedDB
+ */
+async function processAndSaveImage(imageSrc, section, fieldKey) {
+  if (!imageSrc || imageSrc.startsWith('./asset/') || imageSrc.startsWith('http')) {
+    // Static or external image, don't save to IndexedDB
+    return null;
+  }
+  
+  if (imageSrc.startsWith('data:')) {
+    // Base64 image, convert to blob and save
+    try {
+      const response = await fetch(imageSrc);
+      const blob = await response.blob();
+      const imageData = {
+        filename: `${fieldKey}-${Date.now()}.png`,
+        original_name: fieldKey,
+        path: `./asset/${fieldKey}.png`,
+        size: blob.size,
+        mime_type: blob.type,
+        width: 0,
+        height: 0,
+        used_in: section,
+        field_key: fieldKey,
+        blob: blob
+      };
+      const savedImage = await GenLeatherDB.addImage(imageData);
+      return savedImage;
+    } catch (error) {
+      console.error('Error saving image to IndexedDB:', error);
+      return null;
+    }
+  }
+  
+  return null;
+}
+
+async function editProduk(id) {
   const data = ContentManager.getAll();
   const product = data.koleksi.products.find(p => p.id === id);
   
@@ -325,6 +374,24 @@ function editProduk(id) {
     document.getElementById('newProdukName').value = product.name;
     document.getElementById('newProdukCategory').value = product.category;
     document.getElementById('newProdukImage').value = product.image;
+    document.getElementById('newProdukImageUrl').value = product.image;
+    
+    // Show image preview if exists
+    if (product.image) {
+      // Check if it's a blob URL from IndexedDB or a regular path/URL
+      let imageSrc = product.image;
+      
+      // Try to get blob URL from IndexedDB if dbImageId exists
+      if (product.dbImageId) {
+        const dbImage = await GenLeatherDB.getImageById(product.dbImageId);
+        if (dbImage && dbImage.blob) {
+          imageSrc = URL.createObjectURL(dbImage.blob);
+        }
+      }
+      
+      showImagePreview('produkImagePreview', imageSrc);
+    }
+    
     document.getElementById('produkModalTitle').textContent = 'Edit Produk';
     openModal('produkModal');
   }

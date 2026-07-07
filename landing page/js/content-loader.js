@@ -48,9 +48,16 @@ async function enhanceWithDatabaseImages(data) {
               if (katItem) katItem.image = blobUrl;
               break;
             case 'koleksi':
-              // Find matching product
-              const product = data.koleksi.products.find(p => p.id == img.id || p.name === img.original_name);
-              if (product) product.image = blobUrl;
+              // Find matching product by field_key (format: product-{id})
+              const productFieldKey = img.field_key;
+              if (productFieldKey && productFieldKey.startsWith('product-')) {
+                const productId = parseInt(productFieldKey.replace('product-', ''));
+                const product = data.koleksi.products.find(p => p.id === productId || p.id == productId);
+                if (product) {
+                  product.image = blobUrl;
+                  product.dbImageId = img.id; // Store DB image ID for reference
+                }
+              }
               break;
             case 'cerita':
               if (img.field_key === 'image') data.cerita.image = blobUrl;
